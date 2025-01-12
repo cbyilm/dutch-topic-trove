@@ -6,23 +6,29 @@ export const fetchDutchReferenceText = async (category: string): Promise<string>
   console.log("Fetching Dutch reference text for category:", category);
   
   try {
-    // First get random page from category
-    const randomPageParams = {
+    // First get pages from category
+    const categoryParams = {
       action: "query",
       format: "json",
-      list: "random",
-      rnnamespace: 0,
-      rnlimit: 5, // Increased to get more potential pages
+      list: "categorymembers",
+      cmtitle: `Categorie:${category}`,
+      cmlimit: 5,
+      cmtype: "page",
       origin: "*",
-      gcmtitle: `Categorie:${category}`,
     };
 
-    const randomResponse = await axios.get(API_URL, { params: randomPageParams });
+    const categoryResponse = await axios.get(API_URL, { params: categoryParams });
+    
+    if (!categoryResponse.data.query?.categorymembers?.length) {
+      console.error("No pages found in category");
+      throw new Error("No pages found in this category");
+    }
+
     let selectedPage = null;
     let text = "";
 
-    // Try each random page until we find one with sufficient content
-    for (const page of randomResponse.data.query.random) {
+    // Try each page until we find one with sufficient content
+    for (const page of categoryResponse.data.query.categorymembers) {
       const pageTitle = page.title;
       console.log("Trying page:", pageTitle);
 
