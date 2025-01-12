@@ -6,21 +6,42 @@ export const fetchDutchReferenceText = async (category: string): Promise<string>
   console.log("Fetching Dutch reference text for category:", category);
   
   try {
-    // First get pages from category
-    const categoryParams = {
-      action: "query",
-      format: "json",
-      list: "categorymembers",
-      cmtitle: `Categorie:${category}`,
-      cmlimit: 5,
-      cmtype: "page",
-      origin: "*",
-    };
+    // Try different category name formats
+    const categoryVariations = [
+      `Categorie:${category}`,
+      `Categorie:${category.charAt(0).toUpperCase() + category.slice(1)}`,
+      `Categorie:Nederlandse_${category}`,
+      `Categorie:${category}_in_Nederland`
+    ];
 
-    const categoryResponse = await axios.get(API_URL, { params: categoryParams });
-    
-    if (!categoryResponse.data.query?.categorymembers?.length) {
-      console.error("No pages found in category");
+    let foundPages = false;
+    let categoryResponse;
+
+    // Try each category variation until we find pages
+    for (const categoryTitle of categoryVariations) {
+      console.log("Trying category:", categoryTitle);
+      
+      const categoryParams = {
+        action: "query",
+        format: "json",
+        list: "categorymembers",
+        cmtitle: categoryTitle,
+        cmlimit: 10, // Increased limit to find more potential pages
+        cmtype: "page",
+        origin: "*",
+      };
+
+      categoryResponse = await axios.get(API_URL, { params: categoryParams });
+      
+      if (categoryResponse.data.query?.categorymembers?.length) {
+        console.log(`Found pages in category: ${categoryTitle}`);
+        foundPages = true;
+        break;
+      }
+    }
+
+    if (!foundPages || !categoryResponse?.data.query?.categorymembers?.length) {
+      console.error("No pages found in any category variation");
       throw new Error("No pages found in this category");
     }
 
