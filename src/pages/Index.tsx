@@ -1,11 +1,11 @@
 import { useState } from "react";
-import { Category, fetchDutchReferenceText } from "@/utils/wikipediaApi";
+import { fetchDutchReferenceText } from "@/utils/wikipediaApi";
 import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useToast } from "@/components/ui/use-toast";
+import { Input } from "@/components/ui/input";
+import { useToast } from "@/hooks/use-toast";
 
 const Index = () => {
-  const [category, setCategory] = useState<Category>("health");
+  const [category, setCategory] = useState<string>("health");
   const [text, setText] = useState<string>("");
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
@@ -47,23 +47,18 @@ const Index = () => {
 
         <div className="bg-white rounded-lg shadow-lg p-6 space-y-6">
           <div className="flex flex-col sm:flex-row gap-4 items-center">
-            <Select
+            <Input
+              type="text"
               value={category}
-              onValueChange={(value) => setCategory(value as Category)}
-            >
-              <SelectTrigger className="w-[200px]">
-                <SelectValue placeholder="Select category" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="health">Health/Medical</SelectItem>
-                <SelectItem value="transport">Travel/Transport</SelectItem>
-              </SelectContent>
-            </Select>
+              onChange={(e) => setCategory(e.target.value)}
+              placeholder="Enter category (e.g., health, transport, science)"
+              className="w-full sm:w-[300px]"
+            />
 
             <Button
               onClick={handleGenerate}
               disabled={loading}
-              className="bg-dutch-orange hover:bg-dutch-orange/90 text-white"
+              className="bg-dutch-orange hover:bg-dutch-orange/90 text-white w-full sm:w-auto"
             >
               {loading ? "Generating..." : "Generate Text"}
             </Button>

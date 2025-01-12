@@ -2,14 +2,7 @@ import axios from "axios";
 
 const API_URL = "https://nl.wikipedia.org/w/api.php";
 
-export type Category = "health" | "transport";
-
-const categoryMappings = {
-  health: ["Gezondheid", "Geneeskunde", "Medisch"],
-  transport: ["Transport", "Vervoer", "Reizen"],
-};
-
-export const fetchDutchReferenceText = async (category: Category): Promise<string> => {
+export const fetchDutchReferenceText = async (category: string): Promise<string> => {
   console.log("Fetching Dutch reference text for category:", category);
   
   try {
@@ -21,7 +14,7 @@ export const fetchDutchReferenceText = async (category: Category): Promise<strin
       rnnamespace: 0,
       rnlimit: 1,
       origin: "*",
-      gcmtitle: `Categorie:${categoryMappings[category][0]}`,
+      gcmtitle: `Categorie:${category}`,
     };
 
     const randomResponse = await axios.get(API_URL, { params: randomPageParams });
