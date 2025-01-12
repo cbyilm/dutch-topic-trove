@@ -12,35 +12,54 @@ export const fetchDutchReferenceText = async (category: string): Promise<string>
       format: "json",
       list: "random",
       rnnamespace: 0,
-      rnlimit: 1,
+      rnlimit: 5, // Increased to get more potential pages
       origin: "*",
       gcmtitle: `Categorie:${category}`,
     };
 
     const randomResponse = await axios.get(API_URL, { params: randomPageParams });
-    const pageTitle = randomResponse.data.query.random[0].title;
-    console.log("Found page:", pageTitle);
+    let selectedPage = null;
+    let text = "";
 
-    // Then get content
-    const contentParams = {
-      action: "parse",
-      format: "json",
-      page: pageTitle,
-      prop: "text",
-      section: 0,
-      origin: "*",
-    };
+    // Try each random page until we find one with sufficient content
+    for (const page of randomResponse.data.query.random) {
+      const pageTitle = page.title;
+      console.log("Trying page:", pageTitle);
 
-    const contentResponse = await axios.get(API_URL, { params: contentParams });
-    const htmlContent = contentResponse.data.parse.text["*"];
+      // Get content for this page
+      const contentParams = {
+        action: "parse",
+        format: "json",
+        page: pageTitle,
+        prop: "text",
+        section: 0,
+        origin: "*",
+      };
 
-    // Clean up HTML content
-    const tempDiv = document.createElement("div");
-    tempDiv.innerHTML = htmlContent;
-    let text = tempDiv.textContent || "";
-    text = text.replace(/\s+/g, " ").trim();
+      const contentResponse = await axios.get(API_URL, { params: contentParams });
+      const htmlContent = contentResponse.data.parse.text["*"];
 
-    // Truncate to approximately 400 words
+      // Clean up HTML content
+      const tempDiv = document.createElement("div");
+      tempDiv.innerHTML = htmlContent;
+      const tempText = tempDiv.textContent || "";
+      const cleanText = tempText.replace(/\s+/g, " ").trim();
+
+      // Check if the text is long enough (at least 300 words)
+      const wordCount = cleanText.split(" ").length;
+      if (wordCount >= 300) {
+        selectedPage = pageTitle;
+        text = cleanText;
+        console.log(`Found suitable page: ${pageTitle} with ${wordCount} words`);
+        break;
+      }
+    }
+
+    if (!selectedPage) {
+      throw new Error("Could not find a page with sufficient content length");
+    }
+
+    // Truncate to approximately 400 words if longer
     const words = text.split(" ");
     if (words.length > 400) {
       text = words.slice(0, 400).join(" ") + "...";
